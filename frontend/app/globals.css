@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 45 14% 98%;
+    --foreground: 220 9% 19%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 9% 19%;
+    --border: 45 7% 91%;
+  }
+
+  .dark {
+    --background: 0 0% 10%;
+    --foreground: 0 0% 90%;
+    --card: 0 0% 13%;
+    --card-foreground: 0 0% 90%;
+    --border: 0 0% 18%;
+  }
+
+  body {
+    @apply bg-[#fbfbfa] dark:bg-[#191919] text-[#2f3437] dark:text-[#e6e6e6] antialiased min-h-screen selection:bg-[#eaeae8] dark:selection:bg-[#2f2f2f] selection:text-[#2f3437] dark:selection:text-[#ffffff];
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* Custom Notion minimalist scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d3d1cb;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #b4b2ac;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #383838;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #4a4a4a;
+}
+
+/* Notion panel and card utility */
+.notion-panel {
+  background: #ffffff;
+  border: 1px solid #e9e9e7;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.dark .notion-panel {
+  background: #202020;
+  border: 1px solid #2f2f2f;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.notion-card {
+  background: #ffffff;
+  border: 1px solid #e9e9e7;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.dark .notion-card {
+  background: #202020;
+  border: 1px solid #2f2f2f;
+}
+
+.notion-card:hover {
+  background: #fbfbfa;
+}
+.dark .notion-card:hover {
+  background: #262626;
+}
