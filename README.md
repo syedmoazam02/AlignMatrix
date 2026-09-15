@@ -2,6 +2,7 @@
 
 [![CI Pipeline](https://github.com/syedmoazam02/AlignMatrix/actions/workflows/ci.yml/badge.svg)](https://github.com/syedmoazam02/AlignMatrix/actions)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178c6.svg)](https://www.typescriptlang.org/)
 [![Next.js 14](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-00a393.svg)](https://fastapi.tiangolo.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -80,7 +81,7 @@ docker-compose up --build
 
 | Domain | Technology | Purpose |
 | :--- | :--- | :--- |
-| **Frontend** | Next.js 14 (App Router), Tailwind, shadcn/ui | React Server Components, Optimistic UI, Polling |
+| **Frontend** | Next.js 14 (App Router), TypeScript, Tailwind, shadcn/ui | React Server Components, Type-Safe Client, Polling |
 | **Backend** | Python 3.10+, FastAPI | High-throughput async HTTP routing |
 | **Database** | PostgreSQL 15+, SQLAlchemy, Alembic | Relational indexing + JSONB for dynamic AI payloads |
 | **Security** | Microsoft Presidio, spaCy | NLP-based PII identification and redaction |
