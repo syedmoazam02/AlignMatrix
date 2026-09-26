@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional
 import spacy
-from presidio_analyzer import AnalyzerEngine
+from presidio_analyzer import AnalyzerEngine, Pattern, PatternRecognizer
 from presidio_analyzer.nlp_engine import NlpEngineProvider
 from presidio_anonymizer import AnonymizerEngine
 from presidio_anonymizer.entities import OperatorConfig
@@ -13,6 +13,7 @@ TARGET_ENTITIES = [
     "EMAIL_ADDRESS",
     "PHONE_NUMBER",
     "LOCATION",
+    "SOCIAL_PROFILE",
 ]
 
 
@@ -30,7 +31,18 @@ def _create_analyzer_engine() -> AnalyzerEngine:
     }
     provider = NlpEngineProvider(nlp_configuration=nlp_config)
     nlp_engine = provider.create_engine()
-    return AnalyzerEngine(nlp_engine=nlp_engine)
+    analyzer = AnalyzerEngine(nlp_engine=nlp_engine)
+    
+    # Custom Social Profile Recognizer
+    social_patterns = [
+        Pattern(name="linkedin_url", regex=r"(?:https?://)?(?:www\.)?linkedin\.com/in/[a-zA-Z0-9_-]+/?", score=0.85),
+        Pattern(name="github_url", regex=r"(?:https?://)?(?:www\.)?github\.com/[a-zA-Z0-9_-]+/?", score=0.85),
+        Pattern(name="twitter_url", regex=r"(?:https?://)?(?:www\.)?(?:twitter\.com|x\.com)/[a-zA-Z0-9_-]+/?", score=0.85),
+    ]
+    social_recognizer = PatternRecognizer(supported_entity="SOCIAL_PROFILE", patterns=social_patterns)
+    analyzer.registry.add_recognizer(social_recognizer)
+    
+    return analyzer
 
 
 class PIISanitizer:

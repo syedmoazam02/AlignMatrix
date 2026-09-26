@@ -40,3 +40,13 @@ def test_pii_sanitizer_preserves_technical_skills():
     assert "FastAPI" in sanitized
     assert "PostgreSQL" in sanitized
     assert "AWS" in sanitized
+
+def test_pii_sanitizer_redacts_social_profiles():
+    sanitizer = get_pii_sanitizer()
+
+    sample_text = "View my work at github.com/johndoe and my profile at https://www.linkedin.com/in/john-doe"
+    sanitized = sanitizer.sanitize(sample_text)
+
+    assert "github.com/johndoe" not in sanitized
+    assert "https://www.linkedin.com/in/john-doe" not in sanitized
+    assert "<SOCIAL_PROFILE>" in sanitized
