@@ -5,12 +5,14 @@ import {
   CheckCircle2,
   AlertCircle,
   HelpCircle,
+  Download,
   ChevronDown,
   ChevronUp,
   Quote,
   ArrowRight,
 } from "lucide-react";
 import { ScoreBreakdown } from "@/lib/types";
+import { jsPDF } from "jspdf";
 
 interface EvidenceMatrixProps {
   scorecard: ScoreBreakdown;
@@ -34,6 +36,8 @@ interface MatrixItem {
 export function EvidenceMatrix({ scorecard, resumeText }: EvidenceMatrixProps) {
   const [expandedId, setExpandedId] = useState<string | null>("req-1");
   const [filterStatus, setFilterStatus] = useState<string>("All");
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const matrixItems: MatrixItem[] = [
     {
@@ -210,6 +214,125 @@ export function EvidenceMatrix({ scorecard, resumeText }: EvidenceMatrixProps) {
     return item.status === filterStatus;
   });
 
+  const handleDownloadPdf = () => {
+    try {
+      setIsExporting(true);
+      setExportError(null);
+
+      const pdf = new jsPDF({ unit: "pt", format: "a4" });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 40;
+      const rowPadding = 4;
+      const lineHeight = 12;
+      let y = margin;
+
+      const ensureSpace = (requiredHeight: number) => {
+        if (y + requiredHeight > pageHeight - margin) {
+          pdf.addPage();
+          y = margin;
+        }
+      };
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(18);
+      pdf.text("AlignMatrix Evidence Report", margin, y);
+      y += 20;
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+      pdf.text(`Generated: ${new Date().toLocaleString()}`, margin, y);
+      y += 18;
+
+      pdf.setDrawColor(0);
+      pdf.line(margin, y, pageWidth - margin, y);
+      y += 16;
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(12);
+      pdf.text(`Overall Score: ${scorecard.overall_score}/100`, margin, y);
+      y += 16;
+
+      const metricRows: Array<[string, number]> = [
+        ["Skills Match", scorecard.skills_match?.score ?? 0],
+        ["Experience Match", scorecard.experience_match?.score ?? 0],
+        ["Job Alignment", scorecard.job_alignment?.score ?? 0],
+        ["Impact & Deliverables", scorecard.impact_and_achievements?.score ?? 0],
+        ["Education Match", scorecard.education_match?.score ?? 0],
+      ];
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+      metricRows.forEach(([label, value]) => {
+        pdf.text(`${label}: ${value}/100`, margin, y);
+        y += 13;
+      });
+
+      y += 8;
+      ensureSpace(28);
+
+      const columns = [
+        { title: "Requirement", width: 140 },
+        { title: "Priority", width: 60 },
+        { title: "Status", width: 90 },
+        { title: "Confidence", width: 70 },
+        { title: "Evidence & Action", width: pageWidth - margin * 2 - 360 },
+      ];
+
+      const drawTableHeader = () => {
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(9);
+        let x = margin;
+        const headerHeight = 20;
+        columns.forEach((column) => {
+          pdf.rect(x, y, column.width, headerHeight);
+          pdf.text(column.title, x + rowPadding, y + 13);
+          x += column.width;
+        });
+        y += headerHeight;
+      };
+
+      drawTableHeader();
+
+      matrixItems.forEach((item) => {
+        const rowValues = [
+          item.requirement,
+          item.priority,
+          item.status,
+          item.confidence,
+          `Evidence: ${item.evidenceSnippet || "No evidence cited"}\nAction: ${item.action}`,
+        ];
+
+        const wrappedCells = rowValues.map((value, index) =>
+          pdf.splitTextToSize(value, columns[index].width - rowPadding * 2)
+        );
+        const maxLines = Math.max(...wrappedCells.map((lines) => lines.length));
+        const rowHeight = maxLines * lineHeight + rowPadding * 2;
+
+        ensureSpace(rowHeight + 1);
+        if (y === margin) {
+          drawTableHeader();
+        }
+
+        let x = margin;
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(8.5);
+        wrappedCells.forEach((lines, index) => {
+          pdf.rect(x, y, columns[index].width, rowHeight);
+          pdf.text(lines, x + rowPadding, y + 10);
+          x += columns[index].width;
+        });
+        y += rowHeight;
+      });
+
+      pdf.save("AlignMatrix_Report.pdf");
+    } catch (error) {
+      setExportError("Unable to generate the PDF report. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto animate-in fade-in duration-200">
       {/* Signature Header */}
@@ -232,22 +355,37 @@ export function EvidenceMatrix({ scorecard, resumeText }: EvidenceMatrixProps) {
         </div>
 
         {/* Status Filter Chips */}
-        <div className="flex items-center space-x-1.5 overflow-x-auto pb-1">
-          {["All", "Demonstrated", "Partial", "Missing", "Unsupported"].map((st) => (
-            <button
-              key={st}
-              onClick={() => setFilterStatus(st)}
-              className={`px-2.5 py-1 rounded-md text-xs transition-colors ${
-                filterStatus === st
-                  ? "bg-[#2f3437] dark:bg-white text-white dark:text-[#191919] font-medium"
-                  : "bg-white dark:bg-[#202020] text-[#787774] dark:text-[#9b9a97] hover:text-[#2f3437] dark:hover:text-white border border-[#e9e9e7] dark:border-[#2f2f2f] hover:bg-[#fbfbfa] dark:hover:bg-[#282828]"
-              }`}
-            >
-              {st}
-            </button>
-          ))}
+        <div className="flex flex-col items-start sm:items-end gap-2">
+          <button
+            onClick={handleDownloadPdf}
+            disabled={isExporting}
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#2f3437] text-white dark:bg-white dark:text-[#191919] hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed transition-opacity"
+          >
+            <Download className="h-3.5 w-3.5" />
+            <span>{isExporting ? "Generating PDF..." : "Download PDF"}</span>
+          </button>
+          <div className="flex items-center space-x-1.5 overflow-x-auto pb-1">
+            {["All", "Demonstrated", "Partial", "Missing", "Unsupported"].map((st) => (
+              <button
+                key={st}
+                onClick={() => setFilterStatus(st)}
+                className={`px-2.5 py-1 rounded-md text-xs transition-colors ${
+                  filterStatus === st
+                    ? "bg-[#2f3437] dark:bg-white text-white dark:text-[#191919] font-medium"
+                    : "bg-white dark:bg-[#202020] text-[#787774] dark:text-[#9b9a97] hover:text-[#2f3437] dark:hover:text-white border border-[#e9e9e7] dark:border-[#2f2f2f] hover:bg-[#fbfbfa] dark:hover:bg-[#282828]"
+                }`}
+              >
+                {st}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
+      {exportError && (
+        <div className="text-xs text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-md px-3 py-2">
+          {exportError}
+        </div>
+      )}
 
       {/* The Evidence Matrix Table */}
       <div className="rounded-lg border border-[#e9e9e7] dark:border-[#2f2f2f] bg-white dark:bg-[#202020] overflow-hidden shadow-2xs transition-colors">
