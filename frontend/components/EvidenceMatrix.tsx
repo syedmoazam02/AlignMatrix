@@ -8,7 +8,8 @@ import {
   ChevronDown,
   ChevronUp,
   Quote,
-  ArrowRight,
+  Copy,
+  Check,
 } from "lucide-react";
 import { ScoreBreakdown } from "@/lib/types";
 
@@ -34,6 +35,8 @@ interface MatrixItem {
 export function EvidenceMatrix({ scorecard, resumeText }: EvidenceMatrixProps) {
   const [expandedId, setExpandedId] = useState<string | null>("req-1");
   const [filterStatus, setFilterStatus] = useState<string>("All");
+  const [copiedFeedbackId, setCopiedFeedbackId] = useState<string | null>(null);
+  const [showCopiedToast, setShowCopiedToast] = useState(false);
 
   const matrixItems: MatrixItem[] = [
     {
@@ -210,6 +213,14 @@ export function EvidenceMatrix({ scorecard, resumeText }: EvidenceMatrixProps) {
     return item.status === filterStatus;
   });
 
+  const handleCopyFeedback = async (itemId: string, feedback: string) => {
+    await navigator.clipboard.writeText(feedback);
+    setCopiedFeedbackId(itemId);
+    setShowCopiedToast(true);
+    setTimeout(() => setCopiedFeedbackId(null), 1500);
+    setTimeout(() => setShowCopiedToast(false), 1800);
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto animate-in fade-in duration-200">
       {/* Signature Header */}
@@ -348,8 +359,29 @@ export function EvidenceMatrix({ scorecard, resumeText }: EvidenceMatrixProps) {
                       </div>
 
                       <div className="p-3 rounded-md bg-white dark:bg-[#202020] border border-[#e9e9e7] dark:border-[#2f2f2f]">
-                        <div className="text-[10px] uppercase font-bold text-[#9b9a97] tracking-wider mb-1">
-                          Truthful Improvement
+                        <div className="text-[10px] uppercase font-bold text-[#9b9a97] tracking-wider mb-1 flex items-center justify-between gap-2">
+                          <span>Truthful Improvement</span>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void handleCopyFeedback(item.id, item.truthfulImprovement);
+                            }}
+                            className="inline-flex items-center space-x-1 rounded border border-[#e9e9e7] dark:border-[#2f2f2f] px-1.5 py-0.5 text-[10px] normal-case text-[#787774] dark:text-[#9b9a97] hover:text-[#2f3437] dark:hover:text-white bg-[#fbfbfa] dark:bg-[#191919]"
+                            aria-label="Copy actionable feedback"
+                          >
+                            {copiedFeedbackId === item.id ? (
+                              <>
+                                <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                                <span>Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3 w-3" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
                         </div>
                         <p className="text-xs text-[#2f3437] dark:text-[#e6e6e6] font-medium leading-relaxed">
                           {item.truthfulImprovement}
@@ -378,6 +410,12 @@ export function EvidenceMatrix({ scorecard, resumeText }: EvidenceMatrixProps) {
           })}
         </div>
       </div>
+
+      {showCopiedToast && (
+        <div className="fixed bottom-6 right-6 z-50 rounded-md border border-[#e9e9e7] dark:border-[#2f2f2f] bg-white dark:bg-[#202020] px-3 py-2 text-xs text-[#2f3437] dark:text-[#e6e6e6] shadow-lg">
+          Feedback copied!
+        </div>
+      )}
     </div>
   );
 }
