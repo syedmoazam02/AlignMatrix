@@ -25,7 +25,7 @@ export function DocumentInspector({ scorecard, resumeText }: DocumentInspectorPr
   // Set default active excerpt on load
   useEffect(() => {
     if (allEvidence.length > 0 && !activeExcerpt) {
-      setActiveExcerpt(allEvidence[0].evidence.resume_excerpt);
+      setActiveExcerpt(allEvidence[0].evidence.resume_excerpt || null);
     }
   }, [allEvidence, activeExcerpt]);
 
@@ -124,7 +124,7 @@ export function DocumentInspector({ scorecard, resumeText }: DocumentInspectorPr
             return (
               <div
                 key={idx}
-                onClick={() => setActiveExcerpt(item.evidence.resume_excerpt)}
+                onClick={() => setActiveExcerpt(item.evidence.resume_excerpt || null)}
                 className={`p-4 rounded-xl border transition-all cursor-pointer space-y-2 ${
                   isSelected
                     ? "bg-indigo-950/40 border-indigo-500 shadow-lg shadow-indigo-500/10 ring-1 ring-indigo-500/50 scale-[1.01]"

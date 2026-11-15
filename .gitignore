@@ -10,8 +10,15 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+venv/
+.venv/
+ENV/
+env/
+# Only ignore virtualenv lib directories, not frontend/lib
+/lib/
+/lib64/
+!frontend/lib/
+!frontend/lib/**
 parts/
 sdist/
 var/
