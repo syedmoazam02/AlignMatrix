@@ -13,7 +13,7 @@ COPY backend/requirements.txt ./backend/
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r backend/requirements.txt && \
     pip install --no-cache-dir psycopg2-binary && \
-    python -m spacy download en_core_web_lg
+    python -m spacy download en_core_web_sm
 
 # Copy backend source
 COPY backend /app/backend
@@ -23,4 +23,4 @@ ENV PYTHONPATH=/app:/app/backend
 
 EXPOSE 8000
 
-CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+CMD ["sh", "-c", "uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
